@@ -41,34 +41,36 @@ public final class TranslateV2 extends GoogleAPI implements Translate {
 	/**
 	 * Constants.
 	 */
-    private static final String	URL_TEMPLATE = "https://www.googleapis.com/language/translate/v2?key=%s&q=%s&target=%s";
+	private static final String URL = "https://www.googleapis.com/language/translate/v2";
+	private static final String PAR_TEMPLATE = "key=%s&q=%s&target=%s";
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String execute(final String text, final Language from, final Language to) throws GoogleAPIException {
-    	try {
-	    	validateReferrer();
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String execute(final String text, final Language from, final Language to) throws GoogleAPIException {
+		try {
+			validateReferrer();
+
+			if (key == null) {
+				throw new IllegalStateException("You MUST have a Google API Key to use the V2 APIs. See http://code.google.com/apis/language/translate/v2/getting_started.html");
+			}
+
+			final String parameters = String.format(PAR_TEMPLATE, key, URLEncoder.encode(text, ENCODING), to.toString())
+					+ (Language.AUTO_DETECT.equals(from) ? "" : String.format("&source=%s", from.toString()));
+
+			final URL url = new URL(URL);
+
+			final JSONObject json = retrieveJSON(url, parameters);
+
+			return getJSONResponse(json);
+		} catch (final Exception e) {
+			System.out.println("Error: " + e.getMessage());
+
+			throw new GoogleAPIException(e);
+		}
+	}
 	
-	    	if (key == null) {
-	    		throw new IllegalStateException("You MUST have a Google API Key to use the V2 APIs. See http://code.google.com/apis/language/translate/v2/getting_started.html");
-	    	}
-	    	
-	    	final String populatedTemplate = String.format(URL_TEMPLATE, key, URLEncoder.encode(text, ENCODING), to.toString());
-	    	
-	    	final URL url = new URL(Language.AUTO_DETECT.equals(from) ? populatedTemplate : populatedTemplate + String.format("&source=%s", from.toString()));
-	    	
-	    	final JSONObject json = retrieveJSON(url);
-	    	
-	    	return getJSONResponse(json);
-    	} catch (final Exception e) {
-    		System.out.println("Error: " +e.getMessage());
-    		
-    		throw new GoogleAPIException(e);
-    	}
-    }
-
     /**
      * {@inheritDoc}
      */
